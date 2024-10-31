@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Grocery List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Passions+Conflict&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+      background-color: #f4f6f8;
+      background-image: url('food.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      width: 100%;
+      padding: 20px;
+      background-color: rgba(51, 51, 51, 0.85);
+      color: #ffffff;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    header h1 {
+      font-family: 'Passions Conflict', cursive;
+      font-size: 4rem;
+      margin: 0;
+    }
+
+    .update-container {
+      width: 90%;
+      max-width: 600px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+      margin: 20px;
+    }
+
+    h2 {
+      color: #007bff;
+      text-align: center;
+    }
+
+    label, select, .add-ingredient-container h3 {
+      font-weight: bold;
+      color: #333;
+    }
+
+    select, button, input[type="number"], input[type="text"] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .ingredient-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+
+    .ingredient-item input[type="number"] {
+      width: 80px;
+      padding: 5px;
+    }
+
+    .delete-btn {
+        background-color: #ff4d4d;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        width: 80px;  /* Fixed width for uniform size */
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      
+      .delete-btn:hover {
+        background-color: #e60000;
+        transform: scale(1.05);
+      }
+      
+      .add-ingredient-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Update Grocery List</h1>
+  </header>
+  <div class="update-container">
+    <h2 id="meal-title"></h2>
+    <label for="pax-select">Select Pax:</label>
+    <select id="pax-select" onchange="updateQuantities()">
+      <option value="1">1 pax</option>
+      <option value="2">2 pax</option>
+      <option value="4">4 pax</option>
+    </select>
+    <ul id="ingredient-list"></ul>
+    <div class="add-ingredient-container">
+        <h3>Add Ingredient</h3>
+        <input type="text" id="new-ingredient" placeholder="Ingredient Name">
+        <input type="number" id="new-quantity" value="1" min="1" placeholder="Quantity">
+        <input type="text" id="new-unit" placeholder="Unit (e.g., g, tbsp)">
+        <button onclick="addIngredient()">Add</button>
+      </div>
+      <button onclick="saveUpdates()">Save Updates</button>
+  <script>
+    // Retrieve selected meal data from localStorage
+    let selectedMeal = JSON.parse(localStorage.getItem('selectedMeal'));
+    document.getElementById('meal-title').textContent = selectedMeal.title;
+
+    const ingredientList = document.getElementById('ingredient-list');
+    const ingredientDropdown = document.getElementById('ingredient-dropdown');
+
+    // Function to fetch ingredients from the API
+    async function fetchIngredientList() {
+      try {
+        const response = await fetch('https://www.themealdb.com/api/json/v1/1/list.php?i=list');
+        const data = await response.json();
+        return data.meals; // Return the list of ingredients
+      } catch (error) {
+        console.error('Error fetching ingredients:', error);
+      }
+    }
+
+    // Populate ingredient list and dropdown
+    async function populateIngredientList() {
+      const ingredients = await fetchIngredientList();
+      selectedMeal.ingredients.forEach((ingredient, index) => {
+        const li = createIngredientItem(ingredient, index);
+        ingredientList.appendChild(li);
+      });
+
+      // Populate the ingredient dropdown with available ingredients for the selected meal
+      selectedMeal.ingredients.forEach(ingredient => {
+        const option = document.createElement('option');
+        option.value = ingredient;
+        option.textContent = ingredient.split(' ').slice(2).join(' '); // Display ingredient name only
+        ingredientDropdown.appendChild(option);
+      });
+    }
+
+    // Call the function to populate the ingredient list
+    populateIngredientList();
+
+    // Adjust quantities according to pax
+    function updateQuantities() {
+        const pax = parseInt(document.getElementById('pax-select').value);
+        selectedMeal.ingredients = selectedMeal.ingredients.map((ingredient, index) => {
+          const [quantity, ...rest] = ingredient.split(" ");
+          const unit = rest.pop(); // Get the unit from the ingredient
+          const newQuantity = parseInt(quantity) * pax;
+          document.getElementById(`quantity-${index}`).value = newQuantity;
+          document.getElementById(`ingredient-${index}`).textContent = `${newQuantity} ${unit} ${rest.join(" ")}`;
+          return `${newQuantity} ${unit} ${rest.join(" ")}`; // Update ingredient quantity in the list
+        });
+      }
+
+    // Create an ingredient item element
+    function createIngredientItem(ingredient, index) {
+      const li = document.createElement('li');
+      li.className = 'ingredient-item';
+      li.innerHTML = `
+        <span id="ingredient-${index}">${ingredient}</span>
+        <input type="number" id="quantity-${index}" value="1" min="1" style="width: 60px;">
+        <button class="delete-btn" onclick="removeIngredient(${index})">Delete</button>
+      `;
+      return li;
+    }
+
+    // Remove ingredient from the list
+    function removeIngredient(index) {
+      selectedMeal.ingredients.splice(index, 1);
+      localStorage.setItem('selectedMeal', JSON.stringify(selectedMeal));
+      updateIngredientList();
+    }
+
+    // Update the displayed ingredient list
+    function updateIngredientList() {
+      ingredientList.innerHTML = '';
+      populateIngredientList(); // Refresh the list
+    }
+ 
+    function addIngredient() {
+        const newIngredient = document.getElementById('new-ingredient').value.trim();
+        const newQuantity = document.getElementById('new-quantity').value;
+        const newUnit = document.getElementById('new-unit').value.trim();
+      
+        if (newIngredient && newQuantity && newUnit) {
+          // Add the new ingredient with quantity and unit to selectedMeal.ingredients
+          selectedMeal.ingredients.push(`${newQuantity} ${newUnit} ${newIngredient}`);
+          localStorage.setItem('selectedMeal', JSON.stringify(selectedMeal));
+          updateIngredientList(); // Refresh the list
+      
+          // Reset fields after adding the ingredient
+          document.getElementById('new-ingredient').value = '';
+          document.getElementById('new-quantity').value = 1;
+          document.getElementById('new-unit').value = '';
+        } else {
+          alert('Please enter valid ingredient, quantity, and unit.');
+        }
+      }
+  
+    function saveUpdates() {
+      const groceryLists = JSON.parse(localStorage.getItem('groceryLists'));
+      const updatedLists = groceryLists.map(list => 
+        list.title === selectedMeal.title ? selectedMeal : list
+      );
+      localStorage.setItem('groceryLists', JSON.stringify(updatedLists));
+    
+      // Redirect back to planner & list page
+      window.location.href = 'planner&list.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meal Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Passions+Conflict&display=swap" rel="stylesheet">
+  <style>
+    /* Embedded CSS */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f6f8;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        background-image: url('food.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 20px;
+      background-color: rgba(51, 51, 51, 0.85); /* Semi-transparent */
+      color: #ffffff;
+      text-align: center;
+      backdrop-filter: blur(5px); /* Blur effect for header */
+    }
+
+    header nav {
+      display: flex;
+      justify-content: center; /* Center navigation links */
+      gap: 20px; /* Space between links */
+    }
+
+    header .planner-link,
+    header .nav-link {
+      text-decoration: none;
+      color: #333;
+      padding: 10px 20px;
+      background-color: #f0f0f0; /* Button background color */
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    header .planner-link:hover,
+    header .nav-link:hover {
+      background-color: #333; /* Hover background color */
+      color: #fff; /* Hover text color */
+    }
+
+    header h1 {
+      margin: 0;
+      font-family: 'Passions Conflict', cursive;
+      font-size: 4rem;
+    }
+
+    #update-container {
+        width: 90%;
+        max-width: 600px;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9); /* Slight transparency */
+        border-radius: 12px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        margin: 20px;
+        z-index: 1;
+    }
+
+    #container {
+        width: 90%;
+        max-width: 1200px;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9); /* Slight transparency */
+        border-radius: 12px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    #meal-input {
+        width: 80%;
+        padding: 12px;
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    #meal-input:focus {
+        border-color: #0056b3;
+    }
+
+    button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        background-color:black;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        margin-bottom: 20px;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+
+    #meal-planner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .meal-item {
+        width: 220px;
+        background-color: #e9f5ff;
+        border: 1px solid #007bff;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        padding: 10px;
+        color: #333;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .meal-item img {
+        width: 100%;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .meal-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #meal-popup {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85); /* Darker background */
+        justify-content: center;
+        align-items: center;
+        color: #333;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    #meal-popup .popup-content {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        overflow-y: auto;
+        max-height: 80vh;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    #meal-popup h3 {
+        margin-top: 0;
+        color: #007bff; /* Header color */
+    }
+
+    #close-popup {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .ingredient-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+    }
+
+    .ingredient-item input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    .ingredient-item input[type="checkbox"]:checked {
+        accent-color: #007bff;
+    }
+
+    /* Grocery List Section */
+    #grocery-list {
+      width: 100%;
+      display: flex;
+      justify-content: center; /* Center the grocery list container */
+      flex-wrap: wrap; /* Allow wrapping of items */
+      margin-top: 20px;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #grocery-items {
+      display: flex;
+      flex-direction: row; /* Align grocery items side by side */
+      align-items: center; /* Align items vertically in the center */
+      justify-content: center; /* Center the grocery items */
+      flex-wrap: wrap; /* Allow items to wrap to the next line if necessary */
+      padding: 20px;
+      width: 90%; /* Set a max width to keep it centered */
+      max-width: 1200px; /* Optional: Limit width for larger screens */
+    }
+
+    .grocery-item {
+      display: flex;
+      flex-direction: column; /* Stack grocery item content vertically */
+      justify-content: flex-start; /* Align items to the start */
+      align-items: center; /* Center the content horizontally */
+      width: 200px; /* Set width for each grocery item */
+      padding: 16px;
+      background-color: #e9f5ff; /* Background color for grocery item */
+      border: 1px solid #007bff; /* Border color */
+      border-radius: 8px; /* Rounded corners */
+      margin: 10px; /* Margin around each grocery item */
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
+    }
+
+
+    #container {
+        width: 90%;
+        max-width: 1200px;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9); /* Slight transparency */
+        border-radius: 12px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px auto; /* Center the container */
+    }
+
+    #grocery-list h2 {
+        background-color: rgba(51, 51, 51, 0.85); /* Matching header theme */
+        color: #ffffff; /* Text color */
+        padding: 10px 20px; /* Padding for button effect */
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: center;
+        display: inline-block;
+        transition: background-color 0.3s ease;
+    }
+
+    #grocery-list h2:hover {
+        background-color: rgba(51, 51, 51, 1); /* Darken on hover */
+    }
+
+
+
+    #groceries-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .grocery-item {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 200px;
+        padding: 16px;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .ingredient-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 8px 0;
+        width: 100%;
+    }
+
+    .ingredient-list li {
+        margin-bottom: 4px;
+    }
+
+    .grocery-item strong {
+        font-size: 1.2em;
+        margin-bottom: 8px;
+    }
+
+    .grocery-item button {
+        align-self: flex-end;
+        padding: 8px 12px;
+        background-color: #ff6b6b;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.3s;
+    }
+
+    .grocery-item button:hover {
+        background-color: #e05a5a;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Meal Finder</h1>
+    <nav>
+      <a href="index.html" class="nav-link">Homepage</a>
+      <a href="planner&list.html" class="planner-link">Meal Planner</a>
+      <a href="filtered.html" class="nav-link">Categories & ingredients</a>
+  </nav>
+</header>
+
+
+  <div id="container">
+    <input type="text" id="meal-input" placeholder="Search for a meal or ingredient">
+    <button onclick="searchMeal()">Search Meal</button>
+    <div id="meal-planner"></div>
+  </div>
+
+  <!-- Pop-up Modal for Meal Details -->
+  <div id="meal-popup">
+    <div class="popup-content">
+      <span id="close-popup" onclick="closePopup()">&times;</span>
+      <h3 id="meal-title"></h3>
+      <img id="meal-image" src="" alt="Meal Image" style="width: 100%; border-radius: 8px;">
+      <h4>Ingredients</h4>
+      <ul id="ingredient-list"></ul>
+      <h4>Instructions</h4>
+      <p id="meal-instructions"></p>
+      <button onclick="addToGroceryList()">Add to Grocery List</button>
+    </div>
+  </div>
+
+  <!-- Grocery List Section -->
+  <div id="container">
+    <div id="grocery-list">
+        <h2>Grocery List</h2>
+        <div id="grocery-items">
+            <!-- Grocery items will appear here -->
+        </div>
+    </div>
+</div>
+
+
+  <script>
+    const apiUrl = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
+    let groceryLists = JSON.parse(localStorage.getItem('groceryLists')) || []; // Stores grocery lists with meal titles and ingredients
+
+    async function searchMeal() {
+      const mealInput = document.getElementById('meal-input').value;
+      try {
+        const response = await fetch(apiUrl + mealInput);
+        console.log('Fetching:', apiUrl + mealInput); // Log the full URL being fetched
+        console.log('Response status:', response.status); // Log the response status
+        const data = await response.json();
+        displayMeals(data.meals);
+      } catch (error) {
+        console.error('Error fetching meals:', error);
+      }
+    }
+
+    function displayMeals(meals) {
+      const mealPlanner = document.getElementById('meal-planner');
+      mealPlanner.innerHTML = ''; // Clear previous results
+      if (!meals) {
+        mealPlanner.innerHTML = '<p>No meals found.</p>';
+        return;
+      }
+      meals.forEach(meal => {
+        const mealItem = document.createElement('div');
+        mealItem.className = 'meal-item';
+        mealItem.innerHTML = `
+          <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+          <h4>${meal.strMeal}</h4>
+        `;
+        mealItem.onclick = () => showMealPopup(meal);
+        mealPlanner.appendChild(mealItem);
+      });
+    }
+
+    function showMealPopup(meal) {
+      document.getElementById('meal-title').textContent = meal.strMeal;
+      document.getElementById('meal-image').src = meal.strMealThumb;
+      document.getElementById('meal-instructions').textContent = meal.strInstructions;
+
+      const ingredientList = document.getElementById('ingredient-list');
+      ingredientList.innerHTML = '';
+
+      for (let i = 1; i <= 20; i++) {
+        const ingredient = meal[`strIngredient${i}`];
+        const measure = meal[`strMeasure${i}`];
+        if (ingredient) {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="ingredient-item">
+              <input type="checkbox" id="ingredient-${i}">
+              <label for="ingredient-${i}">${measure} ${ingredient}</label>
+            </div>
+          `;
+          ingredientList.appendChild(li);
+        }
+      }
+
+      document.getElementById('meal-popup').style.display = 'flex';
+    }
+
+    function closePopup() {
+      document.getElementById('meal-popup').style.display = 'none';
+    }
+
+    function addToGroceryList() {
+      const ingredients = [];
+      for (let i = 1; i <= 20; i++) {
+        const checkbox = document.getElementById(`ingredient-${i}`);
+        if (checkbox && checkbox.checked) {
+          const ingredient = checkbox.nextElementSibling.textContent;
+          ingredients.push(ingredient);
+        }
+      }
+
+      if (ingredients.length > 0) {
+        const mealTitle = document.getElementById('meal-title').textContent;
+        groceryLists.push({ title: mealTitle, ingredients });
+        localStorage.setItem('groceryLists', JSON.stringify(groceryLists));
+        displayGroceryList();
+      }
+      closePopup();
+    }
+
+    function displayGroceryList() {
+      const groceryItemsContainer = document.getElementById('grocery-items');
+      groceryItemsContainer.innerHTML = '';
+
+      groceryLists.forEach((item, index) => {
+        const groceryItem = document.createElement('div');
+        groceryItem.className = 'grocery-item';
+        groceryItem.innerHTML = `
+          <strong>${item.title}</strong>
+          <button onclick="navigateToUpdate('${item.title}')">Update</button>
+          <button onclick="removeFromGroceryList(${index})">Remove</button>
+          <ul class="ingredient-list">
+            ${item.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
+          </ul>
+        `;
+        groceryItemsContainer.appendChild(groceryItem);
+      });
+    }
+
+    function removeFromGroceryList(index) {
+      groceryLists.splice(index, 1); // Remove the item from the grocery list
+      localStorage.setItem('groceryLists', JSON.stringify(groceryLists)); // Update local storage
+      displayGroceryList(); // Refresh the display
+    }
+
+    function navigateToUpdate(mealTitle) {
+      // Find the selected grocery list by title and store it in localStorage
+      const selectedMeal = groceryLists.find(list => list.title === mealTitle);
+      localStorage.setItem('selectedMeal', JSON.stringify(selectedMeal));
+      // Redirect to update.html
+      window.location.href = 'update.html';
+    }
+
+    // Initial display of grocery list on page load
+    displayGroceryList();
+  </script>
+</body>
+</html>
